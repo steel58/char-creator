@@ -10,8 +10,8 @@ class DnDCharacter():
         self.name = name
         self.stats = [_str, dex, con, _int, wis, cha]
         self.stat_bonus = [(i-10) // 2 for i in self.stats]
-        self.initiative = self.stat_bonus[self.stat_index['dex']]
-        self.pasive_perception = self.stat_bonus[self.stat_index['wis']] + prof_bonus + 10;
+        self.initiative = self.stat_bonus[stat_index['dex']]
+        self.pasive_perception = self.stat_bonus[stat_index['wis']] + prof_bonus + 10;
         self.saving_throws = [0 for _ in range(6)]
         self.skill_bonus = [0 for _ in range(18)]
         self.misc_profs = []
@@ -79,7 +79,6 @@ class DnDCharacter():
             setattr(self, trait, _dict[trait])
         return self
 
-
     def currency_convert(count, start, finish):
         if start.lower()[0] == "c":
             return copper_convert[finish.lower()[0]] * count
@@ -94,12 +93,9 @@ class DnDCharacter():
         else:
             return None
 
+    def chose_race():
+        input("What race would you like your character to be? ")
+        pass
 
-class DnDWeapon():
-    def __init__(self, name, base_stat, damage_die,
-                 damage_die_count=1, damage_type="Piercing"):
-        self.name = name
-        self.base_stat = base_stat
-        self.damage_die = damage_die
-        self.damage_die_count = damage_die_count
-        self.damage_type = damage_type
+    def create_character():
+        chose_race()

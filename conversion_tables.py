@@ -108,5 +108,3 @@ skill_base = [
         "dex",
         "wis",
         ]
-
-

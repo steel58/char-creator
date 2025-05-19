@@ -1,0 +1,21 @@
+{
+    "Aasimar": {
+        "variant": true,
+        "variants": ["Fallen Aasimar", "Protector Aasimar", "Scourge Aasimar"],
+    },
+
+    "Fallen Aasimar": {
+        "str": 1,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 2,
+        "speed": 30,
+        "size": "medium",
+        "resistances": ["necrotic", "radiant"],
+        "cantrips": ["light"],
+        "languages": ["common", "celestial"],
+        "abilities":  ["darkvision", "healing hands", "necrotic shroud"],
+    },
+}
