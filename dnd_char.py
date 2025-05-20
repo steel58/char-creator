@@ -6,6 +6,7 @@ class DnDCharacter():
                  cha=0, skill_profs=[], prof_bonus=2, speed=30, level=1,
                  hit_die=6, hit_die_count=1, health=1):
 
+        self.languages = set()
         self.skill_prof = [0 for _ in range(18)]
         self.name = name
         self.stats = [_str, dex, con, _int, wis, cha]
@@ -93,9 +94,63 @@ class DnDCharacter():
         else:
             return None
 
-    def chose_race():
-        input("What race would you like your character to be? ")
-        pass
+    def chose_race(new_char):
+        race = input("What race would you like your character to be? ")
+        new_char.race = race
+        size = input("What size is your race? ")
+        new_char.size = size
+        speed = int(input("What is the speed of your race? "))
+        new_char.speed = speed
+
+        print("Input any languages your race can speak then input 'q' to quit\n")
+        print("To remove a mistake enter 'x [language]'")
+        languages = set()
+        language = input("Enter a language: ")
+        while (language != 'q'):
+            if language[0] == 'x':
+                languages.remove(' '.join(language.split(' ')[1:]))
+            else:
+                languages.add(language)
+            language = input("Enter a language: ")
+
+        new_char.languages = languages
+
+        print("Input any abilities, then their description. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [ability name]'")
+        abilities = dict()
+        ability_name = input("Enter an ability name: ")
+        while ability_name != 'q':
+            if ability_name[0] == 'x':
+                abilities.remove(' '.join(ability_name.split(' ')[1:]))
+            else:
+                ability_description = input(f'Description of {ability_name}: ')
+                abilities[ability_name] = ability_description
+            ability_name = input("Enter an ability name: ")
+
+        print("Input any racial proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                proficiencies.remove(' '.join(proficiency.split(' ')[1:]))
+            else:
+                proficiencies.add(proficiency)
+            proficiency = input("Enter a proficiency: ")
+
+        print("Input any ability score improvements, then the bonus amount. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [stat name]'")
+        ability_scores = dict()
+        stat_name = input("Enter a stat name: ")
+        while stat_name != 'q':
+            if stat_name[0] == 'x':
+                ability_scores.remove(' '.join(stat_name.split(' ')[1:]))
+            else:
+                ability_score = input(f'Bonus to {stat_name}: ')
+                ability_scores[ability_name] = ability_score
+
+            ability_name = input("Enter a stat name: ")
 
     def create_character():
-        chose_race()
+        new_char = DnDCharacter()
+        chose_race(new_char)

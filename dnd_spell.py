@@ -4,6 +4,7 @@ import requests as re
 
 base_link = "https://dnd5e.wikidot.com/spell:"
 
+
 class DNDSpell:
     def __init__(self, title, level, _type, duration, components, _range,
                  casting_time, description, link, damage=None):
@@ -32,6 +33,7 @@ class DNDSpell:
             print(f'    Damage: {self.damage}')
 
         print(f'\n{self.description}')
+        print(f'\n{self.link}')
 
 
 def lookup_spell(name):
@@ -69,8 +71,3 @@ def lookup_spell(name):
     description = description.strip()
     return DNDSpell(name.lower(), level, _type, duration, components, _range,
                     cast_time, description, lookup_link)
-
-
-lookup_spell("prestidigitation").print_spell()
-print()
-lookup_spell("ice knife").print_spell()
