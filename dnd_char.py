@@ -32,6 +32,7 @@ class DnDCharacter():
         self.player_name = "None"
         self.race = "None"
         self.xp = 0
+        self.spell_cast_mod = "int"
         self.personality = []
         self.ideals = []
         self.bonds = []
@@ -238,7 +239,6 @@ class DnDCharacter():
 
         lines.append('+-Features---------------------------------------------------------------------+')
 
-
         for (name, description) in self.abilities.items():
             line = ut.padright(f'|{name}:', 79) + '|'
             lines.append(line)
@@ -246,8 +246,6 @@ class DnDCharacter():
             for dl in des_lines:
                 line = ut.padright(f'|{dl}', 79) + '|'
                 lines.append(line)
-
-            # get description
 
         for pt in self.personality:
             line = ut.padright(f'|{pt}', 79) + '|'
@@ -279,12 +277,10 @@ class DnDCharacter():
         self.update_skills(stat_name)
 
     def update_skills(self, base_stat):
-        for (i, stat) in enumerate(self.skill_base):
-            if stat == base_stat:
-                stat_index = stat_index[stat]
-                self.saving_throws[i] = self.save_prof[i] * self.prof_bonus + self.skill_bonus[i]
-                prof = self.prof_bonus * self.skill_prof[i]
-                self.skill_bonus[i] = prof + self.stat_bonus[stat_index]
+        i = stat_index[stat]
+        self.saving_throws[i] = self.save_prof[i] * self.prof_bonus + self.skill_bonus[i]
+        prof = self.prof_bonus * self.skill_prof[i]
+        self.skill_bonus[i] = prof + self.stat_bonus[i]
 
     def get_bonus(self, word):
         if word in self.stat_index:
