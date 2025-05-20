@@ -1,3 +1,17 @@
+import random
+import time
+
+
+def roll_drop(die, count, drop):
+    random.seed()
+    rolls = []
+    for _ in range(count):
+        rolls.append(random.randint(1, die))
+
+    rolls.sort(reverse=True)
+    return sum(rolls[0:-1])
+
+
 def padleft(string, length):
     result = string
     while len(result) < length:

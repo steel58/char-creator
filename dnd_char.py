@@ -311,14 +311,7 @@ class DnDCharacter():
         else:
             return None
 
-    def chose_race(new_char):
-        race = input("What race would you like your character to be? ")
-        new_char.race = race
-        size = input("What size is your race? ")
-        new_char.size = size
-        speed = int(input("What is the speed of your race? "))
-        new_char.speed = speed
-
+    def get_race_languages(self):
         print("Input any languages your race can speak then input 'q' to quit\n")
         print("To remove a mistake enter 'x [language]'")
         languages = set()
@@ -330,8 +323,9 @@ class DnDCharacter():
                 languages.add(language)
             language = input("Enter a language: ")
 
-        new_char.languages = languages
+        self.languages = languages
 
+    def get_race_ablitites(self):
         print("Input any abilities, then their description. When you are finished input an ability name 'q'\n")
         print("To remove a mistake enter 'x [ability name]'")
         abilities = dict()
@@ -345,8 +339,9 @@ class DnDCharacter():
             ability_name = input("Enter an ability name: ")
 
         for (key, value) in abilities.items():
-            new_char.abilities[key] = value
+            self.abilities[key] = value
 
+    def get_race_proficiencies(self):
         print("Input any racial skill proficiencies you have then input 'q' to quit\n")
         proficiencies = set()
         proficiency = input("Enter a proficiency: ")
@@ -359,7 +354,7 @@ class DnDCharacter():
             proficiency = input("Enter a proficiency: ")
 
         for p in proficiencies:
-            new_char.skill_prof.add(p)
+            self.skill_prof.add(p)
 
         print("Input any other racial proficiencies you have then input 'q' to quit\n")
         proficiencies = set()
@@ -373,8 +368,9 @@ class DnDCharacter():
             proficiency = input("Enter a proficiency: ")
 
         for p in proficiencies:
-            new_char.misc_profs.add(p)
+            self.misc_profs.add(p)
 
+    def get_race_ablility_score(self):
         print("Input any ability score improvements, then the bonus amount. When you are finished input an ability name 'q'\n")
         print("To remove a mistake enter 'x [stat name]'")
         ability_scores = dict()
@@ -384,31 +380,44 @@ class DnDCharacter():
                 ability_scores.remove(' '.join(stat_name.split(' ')[1:]))
             else:
                 ability_score = int(input(f'Bonus to {stat_name}: '))
-                ability_scores[ability_name] = ability_score
+                ability_scores[stat_name] = ability_score
 
-            ability_name = input("Enter a stat name: ")
+            stat_name = input("Enter a stat name: ")
 
         for (key, value) in ability_scores.items():
             stat_idx = stat_index[key]
-            old_stat = new_char.stats[stat_idx]
-            new_char.set_stat(key, old_stat + value)
+            old_stat = self.stats[stat_idx]
+            self.set_stat(key, old_stat + value)
 
-    def chose_class(new_char):
+    def chose_race(self):
+        race = input("What race would you like your character to be? ")
+        self.race = race
+        size = input("What size is your race? ")
+        self.size = size
+        speed = int(input("What is the speed of your race? "))
+        self.speed = speed
+
+        self.get_race_languages()
+
+        self.get_race_abilities()
+
+        self.get_race_proficiencies()
+
+        self.get_race_ability_score()
+
+    def chose_class(self):
         pass
 
-    def create_character():
-        new_char = DnDCharacter()
+    def create_character(self):
         player_name = input("What is your (real life) name? ")
-        new_char.player_name = player_name
+        self.player_name = player_name
 
         # Sets race, some proficiencies, some ability score modifiers, and
         # some languages
-        chose_race(new_char)
+        self.chose_race()
 
-        chose_class(new_char)
+        self.chose_class()
 
-        return new_char
-
-
-me = create_character()
-
+me = DnDCharacter()
+me.create_character()
+me.print_character()
