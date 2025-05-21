@@ -64,7 +64,11 @@ class DnDCharacter():
         self.death_fails = 0
         self.death_saves = 0
 
-    def check(self, stat, advantage, skill=None):
+    # This is the main function to call a check for a skill or stat
+    # The proficiency input is only for abstract things like "instruments"
+    # If you are proficient in preformance that is already counted so leave
+    # @proficiency as False
+    def check(self, stat, advantage=0, skill=None, proficiency=False):
         random.seed()
         roll = random.randint(1, 20)
         if advantage > 0:
@@ -72,11 +76,17 @@ class DnDCharacter():
         elif advantage < 0:
             roll = min(roll, random.randint(1, 20))
 
+        if proficiency:
+            roll += self.prof_bonus
+
         if skill:
             return self.get_bonus(skill) + roll
         else:
             return self.get_bonus(stat) + roll
 
+    # This function modifies the stat @stat_name to the value of @stat_value
+    # This then updates the modifier for that stat and then updates all dependent
+    # skills by calling the update_skills method
     def set_stat(self, stat_name, stat_value):
         index = stat_index[stat_name]
         self.stats[index] = stat_value
@@ -87,10 +97,12 @@ class DnDCharacter():
         self.update_skills(stat_name)
 
     def update_skills(self, base_stat):
-        i = stat_index[stat]
-        self.saving_throws[i] = self.save_bonus[i] * self.prof_bonus + self.skill_bonus[i]
-        prof = self.prof_bonus * self.skill_prof[i]
-        self.skill_bonus[i] = prof + self.stat_bonus[i]
+        st_idx = stat_index[stat]
+        self.save_bonus[st_idx] = self.saving_throws[st_idx] * self.prof_bonus + self.stat_bonus[st_idx]
+        for (i, skill_stat) in enumerate(skill_base):
+            if skill_stat == base_stat:
+                prof = self.prof_bonus * self.skill_prof[i]
+                self.skill_bonus[i] = prof + self.stat_bonus[st_idx]
 
     def get_bonus(self, word):
         if word in self.stat_index:
