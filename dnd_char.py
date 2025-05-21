@@ -104,16 +104,19 @@ class DnDCharacter():
                 prof = self.prof_bonus * self.skill_prof[i]
                 self.skill_bonus[i] = prof + self.stat_bonus[st_idx]
 
+    # Gets the bonus for the input @word. Base stats work in their 3 letter
+    # abreviations, skills in their full or shortened from work this does not
+    # change anything
     def get_bonus(self, word):
         if word in self.stat_index:
             return self.stat_bonus[stat_index[word]]
         elif word.lower() in self.skill_index:
             return self.skill_bonus[skill_index[word]]
-        elif word.lower() == 'prof' or word.lower() == 'proficiency':
-            return self.prof_bonus
         else:
             return 0
 
+    # rounds all money held to largest possible denomination
+    # this does alter the character
     def update_money(self):
         if self.copper >= 10:
             self.silver += self.copper // 10
@@ -131,6 +134,9 @@ class DnDCharacter():
             self.platinum += self.gold // 10
             self.gold = self.gold % 10
 
+    # spends @money amounts of money. @money is in the form [cp, sp, ep, gp, pp]
+    # if unable to spend the amount of money passed (you do not have enough)
+    # returns 1, otherwise returns 0. this alters the character
     def spend(self, money):
         held_money = ut.get_total_copper([self.copper, self.silver, self.electrum,
                                        self.gold, self.platinum])
@@ -148,7 +154,7 @@ class DnDCharacter():
         return 0
 
 
-
+    # Character creation stuff, don't look it's ugly ugly user input through cli
     def get_race_languages(self):
         print("Input any languages your race can speak then input 'q' to quit\n")
         print("To remove a mistake enter 'x [language]'")
