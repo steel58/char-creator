@@ -65,6 +65,33 @@ class DnDCharacter():
         self.death_fails = 0
         self.death_saves = 0
 
+    def find_weapon(self, name):
+        used_weapon = ddw.DnDWeapon("Unarmed Strike", "str", "1", "1",
+                                    damage_type="bludgeoning")
+        for w in self.weapons:
+            if w.name == name:
+                used_weapon = w
+                break
+        return used_weapon
+
+    def attack(self, weapon_name, advantage=0):
+        weapon = self.find_weapon(weapon_name)
+        return self.check(weapon.base_stat, advantage=advantage,
+                          proficiency=weapon.proficiency)
+
+    # This is the function designed to roll damage for physical attacks
+    # this will return the ammount of damage and type as a tuple
+    def roll_dammage(self, weapon_name, crit=False):
+        weapon = self.find_weapon(weapon_name)
+        random.seed()
+        damage = 0
+        for _ in range(weapon.damage_die_count):
+            damage += random.randint(1, weapon.damage_die)
+            if crit:
+                damage += random.randint(1, weapon.damage_die)
+
+        return (damage + self.get_bonus(weapon.base_stat), weapon.damage_type)
+
     # This is the main function to call a check for a skill or stat
     # The proficiency input is only for abstract things like "instruments"
     # If you are proficient in preformance that is already counted so leave
@@ -327,7 +354,8 @@ class DnDCharacter():
             damage_die = input("Enter weapons damage die (eg 2d6 enter '6'): ")
             die_count = input("Enter weapons damage die quantity (eg 2d6 enter '2'): ")
             d_type = input("Enter weapons damage type (eg slash): ")
-            self.weapons.append(ddw.DnDWeapon(name, base_stat, damage_die, die_count, d_type))
+            prof = bool(input("You are proficient with this weapn (True or False)? "))
+            self.weapons.append(ddw.DnDWeapon(name, base_stat, damage_die, die_count, prof, d_type))
             name = input("Enter a Weapon name: ")
 
         print("Input any equipment associated with your class, then their description. When you are finished input an ability name 'q'\n")
