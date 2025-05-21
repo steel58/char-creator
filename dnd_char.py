@@ -2,7 +2,6 @@ from conversion_tables import *
 import utils as ut
 import dnd_weapon as ddw
 import random
-import time
 
 
 class DnDCharacter():
@@ -36,6 +35,8 @@ class DnDCharacter():
         self.race = "None"
         self.xp = 0
         self.spell_cast_mod = "int"
+        self.spell_attack = 0
+        self.spell_dc = 0
         self.personality = []
         self.ideals = []
         self.bonds = []
@@ -97,7 +98,11 @@ class DnDCharacter():
         self.update_skills(stat_name)
 
     def update_skills(self, base_stat):
-        st_idx = stat_index[stat]
+        st_idx = stat_index[base_stat]
+        if base_stat == self.spell_cast_mod:
+            self.spell_attack = self.get_bonus(base_stat) + self.prof_bonus
+            self.spell_dc = 8 + self.spell_attack
+
         self.save_bonus[st_idx] = self.saving_throws[st_idx] * self.prof_bonus + self.stat_bonus[st_idx]
         for (i, skill_stat) in enumerate(skill_base):
             if skill_stat == base_stat:
@@ -263,6 +268,9 @@ class DnDCharacter():
 
         for (key, value) in abilities.items():
             self.abilities[key] = value
+
+        cast_mod = input("What is your spell casting skill (eg 'int')? ")
+        self.spell_cast_mod = cast_mod
 
     def get_class_proficiencies(self):
         print("Input any class skill proficiencies you have then input 'q' to quit\n")
@@ -437,6 +445,12 @@ class DnDCharacter():
         self.chose_class()
 
         self.chose_background()
+        self.update_skills('str')
+        self.update_skills('dex')
+        self.update_skills('int')
+        self.update_skills('wis')
+        self.update_skills('con')
+        self.update_skills('cha')
 
     def print_character(self):
         # Print Name, and player name
