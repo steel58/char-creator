@@ -1,6 +1,8 @@
 from conversion_tables import *
 import utils as ut
 import dnd_weapon as ddw
+import random
+import time
 
 
 class DnDCharacter():
@@ -62,6 +64,19 @@ class DnDCharacter():
         self.death_fails = 0
         self.death_saves = 0
 
+    def check(self, stat, advantage, skill=None):
+        random.seed()
+        roll = random.randint(1, 20)
+        if advantage > 0:
+            roll = max(roll, random.randint(1, 20))
+        elif advantage < 0:
+            roll = min(roll, random.randint(1, 20))
+
+        if skill:
+            return self.get_bonus(skill) + roll
+        else:
+            return self.get_bonus(stat) + roll
+
     def set_stat(self, stat_name, stat_value):
         index = stat_index[stat_name]
         self.stats[index] = stat_value
@@ -85,26 +100,42 @@ class DnDCharacter():
         elif word.lower() == 'prof' or word.lower() == 'proficiency':
             return self.prof_bonus
         else:
-            return "This is not a valid skill or stat"
+            return 0
 
-    def from_dict(self, _dict):
-        for trait in _dict:
-            setattr(self, trait, _dict[trait])
-        return self
+    def update_money(self):
+        if self.copper >= 10:
+            self.silver += self.copper // 10
+            self.copper = self.copper % 10
 
-    def currency_convert(count, start, finish):
-        if start.lower()[0] == "c":
-            return copper_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "s":
-            return silver_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "e":
-            return electrum_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "g":
-            return gold_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "p":
-            return platinum_convert[finish.lower()[0]] * count
-        else:
-            return None
+        if self.silver >= 5:
+            self.electrum += self.silver // 5
+            self.silver = self.silver % 5
+
+        if self.electrum >= 2:
+            self.gold += self.electrum // 2
+            self.electrum = self.electrum % 2
+
+        if self.gold >= 10:
+            self.platinum += self.gold // 10
+            self.gold = self.gold % 10
+
+    def spend(self, money):
+        held_money = ut.get_total_copper([self.copper, self.silver, self.electrum,
+                                       self.gold, self.platinum])
+        cost_money = ut.get_total_copper(money)
+        if cost_money > held_money:
+            return 1
+
+        new_money = held_money - cost_money
+        self.copper = new_money
+        self.silver = 0
+        self.electrum = 0
+        self.gold = 0
+        self.platinum = 0
+        self.update_money()
+        return 0
+
+
 
     def get_race_languages(self):
         print("Input any languages your race can speak then input 'q' to quit\n")
@@ -312,6 +343,71 @@ class DnDCharacter():
         ac = int(input("What is your armour class? "))
         self.ac = ac
 
+    def get_background_proficiencies(self):
+        print("Input any background skill proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                idx = skill_index[proficiency]
+                self.skill_prof[idx] -= 1
+            else:
+                idx = skill_index[proficiency]
+                self.skill_prof[idx] += 1
+
+            proficiency = input("Enter a proficiency: ")
+
+        for p in proficiencies:
+            self.skill_prof.add(p)
+
+        print("Input any other background proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                proficiencies.remove(' '.join(proficiency.split(' ')[1:]))
+            else:
+                proficiencies.add(proficiency)
+            proficiency = input("Enter a proficiency: ")
+
+        for p in proficiencies:
+            self.misc_profs.add(p)
+
+    def get_background_equipment(self):
+        print("Input any equipment associated with your background, then their description. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [ability name]'")
+        equipment = dict()
+        equipment_name = input("Enter an ability name: ")
+        while equipment_name != 'q':
+            if equipment_name[0] == 'x':
+                equipment.pop(' '.join(ability_name.split(' ')[1:]))
+            else:
+                equipment_description = input(f'Description of {equipment_name}: ')
+                equipment[equipment_name] = equipment_description
+            equipment_name = input("Enter an ability name: ")
+
+        for (key, value) in equipment.items():
+            self.equipmment[key] = value
+        # get gold
+
+        copper = int(input("How much copper does your class give you? "))
+        silver = int(input("How much silver does your class give you? "))
+        electrum = int(input("How much electrum does your class give you? "))
+        gold = int(input("How much gold does your class give you? "))
+        platinum = int(input("How much platinum does your class give you? "))
+        self.copper += copper
+        self.silver += silver
+        self.electrum += electrum
+        self.gold += gold
+        self.platinum += platinum
+
+    def chose_background(self):
+        self.get_background_proficiencies()
+
+        self.get_background_equipment()
+
     def create_character(self):
         player_name = input("What is your (real life) name? ")
         self.player_name = player_name
@@ -321,6 +417,8 @@ class DnDCharacter():
         self.chose_race()
 
         self.chose_class()
+
+        self.chose_background()
 
     def print_character(self):
         # Print Name, and player name
@@ -527,6 +625,7 @@ class DnDCharacter():
         for line in lines:
             print(line)
         pass
+
 
 me = DnDCharacter()
 me.create_character()

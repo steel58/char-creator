@@ -1,5 +1,6 @@
 import random
 import time
+from conversion_tables import *
 
 
 def roll_drop(die, count, drop):
@@ -64,3 +65,28 @@ def segment(string, length):
 
     new_lines.append(line_builder)
     return new_lines
+
+
+def currency_convert(count, start, finish):
+    if start.lower()[0] == "c":
+        return copper_convert[finish.lower()[0]] * count
+    elif start.lower()[0] == "s":
+        return silver_convert[finish.lower()[0]] * count
+    elif start.lower()[0] == "e":
+        return electrum_convert[finish.lower()[0]] * count
+    elif start.lower()[0] == "g":
+        return gold_convert[finish.lower()[0]] * count
+    elif start.lower()[0] == "p":
+        return platinum_convert[finish.lower()[0]] * count
+    else:
+        return None
+
+
+def get_total_copper(money):
+    total_copper = self.copper
+    total_copper += currency_convert(money[1], 's', 'c')
+    total_copper += currency_convert(money[2], 'e', 'c')
+    total_copper += currency_convert(money[3], 'g', 'c')
+    total_copper += currency_convert(money[4], 'p', 'c')
+
+    return total_copper
