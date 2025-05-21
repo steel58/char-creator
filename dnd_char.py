@@ -1,5 +1,6 @@
 from conversion_tables import *
 import utils as ut
+import dnd_weapon as ddw
 
 
 class DnDCharacter():
@@ -16,11 +17,11 @@ class DnDCharacter():
         self.initiative = self.stat_bonus[stat_index['dex']]
         self.pasive_perception = self.stat_bonus[stat_index['wis']] + prof_bonus + 10;
         self.saving_throws = [0 for _ in range(6)]
-        self.save_prof = [0 for _ in range(6)]
+        self.save_bonus = [0 for _ in range(6)]
         self.skill_bonus = [0 for _ in range(18)]
         self.misc_profs = []
         self.prof_bonus = prof_bonus
-        self.class_ = _class
+        self._class = _class
         self.speed = speed
         self.level = level
         self.hit_die = hit_die
@@ -53,13 +54,273 @@ class DnDCharacter():
         self.spells_lvl7 = []
         self.spells_lvl8 = []
         self.spells_lvl9 = []
-        self.equipment = []
+        self.equipment = dict()
         self.weapons = []
         self.abilities = dict()
         self.inspiration = 0
         self.temp_hp = 0
         self.death_fails = 0
         self.death_saves = 0
+
+    def set_stat(self, stat_name, stat_value):
+        index = stat_index[stat_name]
+        self.stats[index] = stat_value
+        self.stat_bonus[index] = (stat_value - 10) // 2
+        if stat_name == 'wis':
+            self.pasive_perception = self.stat_bonus[stat_index['wis']] + self.prof_bonus + 10;
+
+        self.update_skills(stat_name)
+
+    def update_skills(self, base_stat):
+        i = stat_index[stat]
+        self.saving_throws[i] = self.save_bonus[i] * self.prof_bonus + self.skill_bonus[i]
+        prof = self.prof_bonus * self.skill_prof[i]
+        self.skill_bonus[i] = prof + self.stat_bonus[i]
+
+    def get_bonus(self, word):
+        if word in self.stat_index:
+            return self.stat_bonus[stat_index[word]]
+        elif word.lower() in self.skill_index:
+            return self.skill_bonus[skill_index[word]]
+        elif word.lower() == 'prof' or word.lower() == 'proficiency':
+            return self.prof_bonus
+        else:
+            return "This is not a valid skill or stat"
+
+    def from_dict(self, _dict):
+        for trait in _dict:
+            setattr(self, trait, _dict[trait])
+        return self
+
+    def currency_convert(count, start, finish):
+        if start.lower()[0] == "c":
+            return copper_convert[finish.lower()[0]] * count
+        elif start.lower()[0] == "s":
+            return silver_convert[finish.lower()[0]] * count
+        elif start.lower()[0] == "e":
+            return electrum_convert[finish.lower()[0]] * count
+        elif start.lower()[0] == "g":
+            return gold_convert[finish.lower()[0]] * count
+        elif start.lower()[0] == "p":
+            return platinum_convert[finish.lower()[0]] * count
+        else:
+            return None
+
+    def get_race_languages(self):
+        print("Input any languages your race can speak then input 'q' to quit\n")
+        print("To remove a mistake enter 'x [language]'")
+        languages = set()
+        language = input("Enter a language: ")
+        while (language != 'q'):
+            if language[0] == 'x':
+                languages.remove(' '.join(language.split(' ')[1:]))
+            else:
+                languages.add(language)
+            language = input("Enter a language: ")
+
+        self.languages = languages
+
+    def get_race_ablitites(self):
+        print("Input any abilities, then their description. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [ability name]'")
+        abilities = dict()
+        ability_name = input("Enter an ability name: ")
+        while ability_name != 'q':
+            if ability_name[0] == 'x':
+                abilities.remove(' '.join(ability_name.split(' ')[1:]))
+            else:
+                ability_description = input(f'Description of {ability_name}: ')
+                abilities[ability_name] = ability_description
+            ability_name = input("Enter an ability name: ")
+
+        for (key, value) in abilities.items():
+            self.abilities[key] = value
+
+    def get_race_proficiencies(self):
+        print("Input any racial skill proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                idx = skill_index[proficiency]
+                self.skill_prof[idx] -= 1
+            else:
+                idx = skill_index[proficiency]
+                self.skill_prof[idx] += 1
+            proficiency = input("Enter a proficiency: ")
+
+        print("Input any other racial proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                proficiencies.remove(' '.join(proficiency.split(' ')[1:]))
+            else:
+                proficiencies.add(proficiency)
+            proficiency = input("Enter a proficiency: ")
+
+        for p in proficiencies:
+            self.misc_profs.add(p)
+
+    def get_race_ablility_score(self):
+        print("Input any ability score improvements, then the bonus amount. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [stat name]'")
+        ability_scores = dict()
+        stat_name = input("Enter a stat name: ")
+        while stat_name != 'q':
+            if stat_name[0] == 'x':
+                ability_scores.remove(' '.join(stat_name.split(' ')[1:]))
+            else:
+                ability_score = int(input(f'Bonus to {stat_name}: '))
+                ability_scores[stat_name] = ability_score
+
+            stat_name = input("Enter a stat name: ")
+
+        for (key, value) in ability_scores.items():
+            stat_idx = stat_index[key]
+            old_stat = self.stats[stat_idx]
+            self.set_stat(key, old_stat + value)
+
+    def chose_race(self):
+        race = input("What race would you like your character to be? ")
+        self.race = race
+        size = input("What size is your race? ")
+        self.size = size
+        speed = int(input("What is the speed of your race? "))
+        self.speed = speed
+
+        self.get_race_languages()
+
+        self.get_race_abilities()
+
+        self.get_race_proficiencies()
+
+        self.get_race_ability_score()
+
+    def get_class_ablitites(self):
+        print("Input any abilities associated with your class, then their description. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [ability name]'")
+        abilities = dict()
+        ability_name = input("Enter an ability name: ")
+        while ability_name != 'q':
+            if ability_name[0] == 'x':
+                abilities.remove(' '.join(ability_name.split(' ')[1:]))
+            else:
+                ability_description = input(f'Description of {ability_name}: ')
+                abilities[ability_name] = ability_description
+            ability_name = input("Enter an ability name: ")
+
+        for (key, value) in abilities.items():
+            self.abilities[key] = value
+
+    def get_class_proficiencies(self):
+        print("Input any class skill proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                idx = skill_index[proficiency]
+                self.skill_prof[idx] -= 1
+            else:
+                idx = skill_index[proficiency]
+                self.skill_prof[idx] += 1
+
+            proficiency = input("Enter a proficiency: ")
+
+        for p in proficiencies:
+            self.skill_prof.add(p)
+
+        print("Input any class saving throw proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                idx = skill_index[proficiency]
+                self.saving_throws[idx] -= 1
+            else:
+                idx = skill_index[proficiency]
+                self.saving_throws[idx] += 1
+
+            proficiency = input("Enter a proficiency: ")
+
+        print("Input any other class proficiencies you have then input 'q' to quit\n")
+        proficiencies = set()
+        proficiency = input("Enter a proficiency: ")
+        print("To remove a mistake enter 'x [proficiency]'")
+        while (proficiency != 'q'):
+            if proficiency[0] == 'x':
+                proficiencies.remove(' '.join(proficiency.split(' ')[1:]))
+            else:
+                proficiencies.add(proficiency)
+            proficiency = input("Enter a proficiency: ")
+
+        for p in proficiencies:
+            self.misc_profs.add(p)
+
+    def get_class_equipment(self):
+        # get weapons
+        print("Input any wapons you have from your class then input 'q' to quit\n")
+        name = input("Enter a Weapon name: ")
+        while name != 'q':
+            base_stat = input("Enter weapons base stat (eg str): ")
+            damage_die = input("Enter weapons damage die (eg 2d6 enter '6'): ")
+            die_count = input("Enter weapons damage die quantity (eg 2d6 enter '2'): ")
+            d_type = input("Enter weapons damage type (eg slash): ")
+            self.weapons.append(ddw.DnDWeapon(name, base_stat, damage_die, die_count, d_type))
+            name = input("Enter a Weapon name: ")
+
+        print("Input any equipment associated with your class, then their description. When you are finished input an ability name 'q'\n")
+        print("To remove a mistake enter 'x [ability name]'")
+        equipment = dict()
+        equipment_name = input("Enter an ability name: ")
+        while equipment_name != 'q':
+            if equipment_name[0] == 'x':
+                equipment.pop(' '.join(ability_name.split(' ')[1:]))
+            else:
+                equipment_description = input(f'Description of {equipment_name}: ')
+                equipment[equipment_name] = equipment_description
+            equipment_name = input("Enter an ability name: ")
+
+        for (key, value) in equipment.items():
+            self.equipmment[key] = value
+        # get gold
+
+        copper = int(input("How much copper does your class give you? "))
+        silver = int(input("How much silver does your class give you? "))
+        electrum = int(input("How much electrum does your class give you? "))
+        gold = int(input("How much gold does your class give you? "))
+        platinum = int(input("How much platinum does your class give you? "))
+        self.copper = copper
+        self.silver = silver
+        self.electrum = electrum
+        self.gold = gold
+        self.platinum = platinum
+
+    def chose_class(self):
+        _class = input("What class would you like to be? ")
+        self._class = _class
+        hit_die = input("What die is your hit die (eg 6 for d6)? ")
+        self.hit_die = int(hit_die)
+        self.get_class_proficiencies()
+        self.get_class_ablitites()
+        self.get_class_equipment()
+
+        ac = int(input("What is your armour class? "))
+        self.ac = ac
+
+    def create_character(self):
+        player_name = input("What is your (real life) name? ")
+        self.player_name = player_name
+
+        # Sets race, some proficiencies, some ability score modifiers, and
+        # some languages
+        self.chose_race()
+
+        self.chose_class()
 
     def print_character(self):
         # Print Name, and player name
@@ -266,157 +527,6 @@ class DnDCharacter():
         for line in lines:
             print(line)
         pass
-
-    def set_stat(self, stat_name, stat_value):
-        index = stat_index[stat_name]
-        self.stats[index] = stat_value
-        self.stat_bonus[index] = (stat_value - 10) // 2
-        if stat_name == 'wis':
-            self.pasive_perception = self.stat_bonus[stat_index['wis']] + self.prof_bonus + 10;
-
-        self.update_skills(stat_name)
-
-    def update_skills(self, base_stat):
-        i = stat_index[stat]
-        self.saving_throws[i] = self.save_prof[i] * self.prof_bonus + self.skill_bonus[i]
-        prof = self.prof_bonus * self.skill_prof[i]
-        self.skill_bonus[i] = prof + self.stat_bonus[i]
-
-    def get_bonus(self, word):
-        if word in self.stat_index:
-            return self.stat_bonus[stat_index[word]]
-        elif word.lower() in self.skill_index:
-            return self.skill_bonus[skill_index[word]]
-        elif word.lower() == 'prof' or word.lower() == 'proficiency':
-            return self.prof_bonus
-        else:
-            return "This is not a valid skill or stat"
-
-    def from_dict(self, _dict):
-        for trait in _dict:
-            setattr(self, trait, _dict[trait])
-        return self
-
-    def currency_convert(count, start, finish):
-        if start.lower()[0] == "c":
-            return copper_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "s":
-            return silver_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "e":
-            return electrum_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "g":
-            return gold_convert[finish.lower()[0]] * count
-        elif start.lower()[0] == "p":
-            return platinum_convert[finish.lower()[0]] * count
-        else:
-            return None
-
-    def get_race_languages(self):
-        print("Input any languages your race can speak then input 'q' to quit\n")
-        print("To remove a mistake enter 'x [language]'")
-        languages = set()
-        language = input("Enter a language: ")
-        while (language != 'q'):
-            if language[0] == 'x':
-                languages.remove(' '.join(language.split(' ')[1:]))
-            else:
-                languages.add(language)
-            language = input("Enter a language: ")
-
-        self.languages = languages
-
-    def get_race_ablitites(self):
-        print("Input any abilities, then their description. When you are finished input an ability name 'q'\n")
-        print("To remove a mistake enter 'x [ability name]'")
-        abilities = dict()
-        ability_name = input("Enter an ability name: ")
-        while ability_name != 'q':
-            if ability_name[0] == 'x':
-                abilities.remove(' '.join(ability_name.split(' ')[1:]))
-            else:
-                ability_description = input(f'Description of {ability_name}: ')
-                abilities[ability_name] = ability_description
-            ability_name = input("Enter an ability name: ")
-
-        for (key, value) in abilities.items():
-            self.abilities[key] = value
-
-    def get_race_proficiencies(self):
-        print("Input any racial skill proficiencies you have then input 'q' to quit\n")
-        proficiencies = set()
-        proficiency = input("Enter a proficiency: ")
-        print("To remove a mistake enter 'x [proficiency]'")
-        while (proficiency != 'q'):
-            if proficiency[0] == 'x':
-                proficiencies.remove(' '.join(proficiency.split(' ')[1:]))
-            else:
-                proficiencies.add(proficiency)
-            proficiency = input("Enter a proficiency: ")
-
-        for p in proficiencies:
-            self.skill_prof.add(p)
-
-        print("Input any other racial proficiencies you have then input 'q' to quit\n")
-        proficiencies = set()
-        proficiency = input("Enter a proficiency: ")
-        print("To remove a mistake enter 'x [proficiency]'")
-        while (proficiency != 'q'):
-            if proficiency[0] == 'x':
-                proficiencies.remove(' '.join(proficiency.split(' ')[1:]))
-            else:
-                proficiencies.add(proficiency)
-            proficiency = input("Enter a proficiency: ")
-
-        for p in proficiencies:
-            self.misc_profs.add(p)
-
-    def get_race_ablility_score(self):
-        print("Input any ability score improvements, then the bonus amount. When you are finished input an ability name 'q'\n")
-        print("To remove a mistake enter 'x [stat name]'")
-        ability_scores = dict()
-        stat_name = input("Enter a stat name: ")
-        while stat_name != 'q':
-            if stat_name[0] == 'x':
-                ability_scores.remove(' '.join(stat_name.split(' ')[1:]))
-            else:
-                ability_score = int(input(f'Bonus to {stat_name}: '))
-                ability_scores[stat_name] = ability_score
-
-            stat_name = input("Enter a stat name: ")
-
-        for (key, value) in ability_scores.items():
-            stat_idx = stat_index[key]
-            old_stat = self.stats[stat_idx]
-            self.set_stat(key, old_stat + value)
-
-    def chose_race(self):
-        race = input("What race would you like your character to be? ")
-        self.race = race
-        size = input("What size is your race? ")
-        self.size = size
-        speed = int(input("What is the speed of your race? "))
-        self.speed = speed
-
-        self.get_race_languages()
-
-        self.get_race_abilities()
-
-        self.get_race_proficiencies()
-
-        self.get_race_ability_score()
-
-    def chose_class(self):
-        pass
-
-    def create_character(self):
-        player_name = input("What is your (real life) name? ")
-        self.player_name = player_name
-
-        # Sets race, some proficiencies, some ability score modifiers, and
-        # some languages
-        self.chose_race()
-
-        self.chose_class()
 
 me = DnDCharacter()
 me.create_character()
