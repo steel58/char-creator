@@ -79,6 +79,25 @@ class DnDCharacter():
         return self.check(weapon.base_stat, advantage=advantage,
                           proficiency=weapon.proficiency)
 
+    # Returns 1 if damage is taken. Returns 0 if knocked unconscious.
+    # Returns -1 if you inta-die
+    def take_damage(self, damage):
+        if self.current_health <= damage:
+            overflow = damage - self.current_health
+            self.current_health = 0
+
+            if overflow >= self.health:
+                return -1
+
+            return 0
+
+        self.current_health -= damage
+        return 1
+
+    # Heals the player by @hp amount
+    def heal(self, hp):
+        self.current_health = min(self.current_health + hp, self.health)
+
     # This is the function designed to roll damage for physical attacks
     # this will return the ammount of damage and type as a tuple
     def roll_dammage(self, weapon_name, crit=False):
@@ -462,6 +481,18 @@ class DnDCharacter():
 
         self.get_background_equipment()
 
+    def select_stats(self):
+        stats = []
+        for _ in range(6):
+            stats.append(ut.roll_drop(6, 4, 1))
+
+        while len(stats):
+            for (i, roll) in stats:
+                print(f'{i}: {roll}')
+            result = int(input(f'Select rolls for {stat_index.keys()[i]}: '))
+            self.stats[i] += result
+            stats.remove(stats[i])
+
     def create_character(self):
         player_name = input("What is your (real life) name? ")
         self.player_name = player_name
@@ -473,6 +504,8 @@ class DnDCharacter():
         self.chose_class()
 
         self.chose_background()
+
+        self.select_stats()
         self.update_skills('str')
         self.update_skills('dex')
         self.update_skills('int')
